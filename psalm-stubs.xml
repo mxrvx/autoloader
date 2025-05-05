@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<stubs xmlns="https://getpsalm.org/schema/config">
+    <file name="psalm-stubs/constants.php"/>
+</stubs>
