@@ -32,8 +32,9 @@ class ClassLister
                 }
             }
 
+            /** @var array<int, class-string> */
             self::$list = \array_values(\array_unique(\array_filter($defined, static function ($class) {
-                return \is_string($class) && \class_exists($class, false);
+                return \is_string($class);
             })));
         }
 
