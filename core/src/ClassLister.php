@@ -43,6 +43,7 @@ class ClassLister
 
     /**
      * @param non-empty-string $pattern
+     * @return array<int, class-string>
      */
     public static function findByRegex(string $pattern): array
     {
@@ -50,14 +51,14 @@ class ClassLister
             return [];
         }
 
-        /** @var array<array-key, array> $cache */
+        /** @var array<array-key, array<int, class-string>> $cache */
         static $cache = [];
 
         if (isset($cache[$pattern])) {
             return $cache[$pattern];
         }
 
-        /** @var array<array-key, string> $classes */
+        /** @var array<int, class-string> $classes */
         $classes = [];
 
         foreach (self::classes() as $class) {

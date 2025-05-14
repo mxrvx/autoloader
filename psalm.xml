@@ -19,6 +19,7 @@
     </issueHandlers>
     <projectFiles>
         <directory name="core/src"/>
+        <directory name="psalm-stubs" />
         <ignoreFiles>
             <directory name="vendor"/>
         </ignoreFiles>

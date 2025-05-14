@@ -3,40 +3,10 @@
 
 declare(strict_types=1);
 
-$dir = __DIR__;
-while (!str_ends_with($dir, DIRECTORY_SEPARATOR)) {
-    $dir = \dirname($dir);
-
-    $file = \implode(DIRECTORY_SEPARATOR, [$dir, 'core', 'config', 'config.inc.php']);
-    if (\file_exists($file)) {
-        require_once $file;
-        break;
-    }
-}
-unset($dir);
-
-if (!\defined('MODX_CORE_PATH')) {
-    exit('Could not load MODX core');
-}
-
-$file = \implode(DIRECTORY_SEPARATOR, [realpath(MODX_CORE_PATH), 'vendor', 'autoload.php']);
-
-if (file_exists($file)) {
-    require_once $file;
-} else {
-    exit('Could not load vendor autoload.php');
-}
-
-
-$file = \implode(DIRECTORY_SEPARATOR, [dirname(__DIR__) , 'core', 'bootstrap.php']);
-if (file_exists($file)) {
-    require $file;
-} else {
-    exit('Could not load bootstrap.php');
-}
-
-
-unset($core, $file);
+/** @psalm-suppress MissingFile */
+require dirname(__DIR__) . '/core/bootstrap.php';
 
 /** @var \modX $modx */
-(new MXRVX\Autoloader\Console\Console(new MXRVX\Autoloader\App($modx)))->run();
+if (isset($modx)) {
+    (new MXRVX\Autoloader\Console\Console(new MXRVX\Autoloader\App($modx)))->run();
+}

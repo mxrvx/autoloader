@@ -61,7 +61,7 @@ class InstallCommand extends Command
         }
 
         /** @var array{key: string, value: mixed} $row */
-        foreach ($app->config->getSettingsArray(true) as $row) {
+        foreach ($app->config->getSettingsArray() as $row) {
             if (!$xpdo->getObject(\modSystemSetting::class, $row['key'])) {
                 /** @var \modSystemSetting $setting */
                 $setting = $xpdo->newObject(\modSystemSetting::class);
