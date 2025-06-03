@@ -16,6 +16,8 @@ class App
 
     public SchemaConfigInterface $config;
     private Manager $manager;
+    private bool $bootstrapAutoloadProcessed = false;
+    private static bool $connectorRequestProcessed = false;
 
     public function __construct(private \xPDO $xpdo)
     {
@@ -33,7 +35,8 @@ class App
             );
         } else {
             if ((bool) $this->config->getSetting('active')?->getValue()) {
-                $this->autoload();
+                $this->processBootstrapAutoload();
+                $this->processConnectorRequest();
             }
         }
     }
@@ -55,8 +58,13 @@ class App
         }
     }
 
-    protected function autoload(): void
+    protected function processBootstrapAutoload(): void
     {
+        if ($this->bootstrapAutoloadProcessed) {
+            return;
+        }
+        $this->bootstrapAutoloadProcessed = true;
+
         $xpdo = $this->xpdo();
         $showErrors = (bool) $this->config->getSetting('show_errors')?->getValue();
 
@@ -79,6 +87,37 @@ class App
                 ),
             );
         }
+    }
+
+    protected function processConnectorRequest(): void
+    {
+        if (self::$connectorRequestProcessed) {
+            return;
+        }
+        self::$connectorRequestProcessed = true;
+
+        $xpdo = $this->xpdo();
+        /** @var array<ArrayNamespaceStructure> $namespaces */
+        $namespaces = $xpdo->call(\modNamespace::class, 'loadCache', [&$xpdo]);
+
+        $matches = [];
+        if (!empty($_SERVER['REQUEST_URI']) && \preg_match('#^/assets/components/([^/]+)/api/([^/.]+)/(.*)?#', $_SERVER['REQUEST_URI'], $matches)) {
+            $namespace = $matches[1];
+            $connector = $matches[2];
+            if (isset($namespaces[$namespace])) {
+                $connectorPath = \sprintf(
+                    '%s/assets/components/%s/api/%s.php',
+                    $_SERVER['DOCUMENT_ROOT'] ?? '',
+                    $namespace,
+                    $connector,
+                );
+                if (\file_exists($connectorPath)) {
+                    require $connectorPath;
+                    exit;
+                }
+            }
+        }
+
     }
 
     protected function loadBootstrap(string $file, bool $showErrors = false): bool
