@@ -15,7 +15,7 @@ class RemoveCommand extends Command
 
     public function run(InputInterface $input, OutputInterface $output): int
     {
-        $xpdo = $this->app->xpdo();
+        $modx = $this->app->modx();
 
         $corePath = MODX_CORE_PATH . 'components/' . App::NAMESPACE;
         if (\is_dir($corePath)) {
@@ -23,7 +23,7 @@ class RemoveCommand extends Command
             $output->writeln('<info>Removed symlink for `core`</info>');
         }
 
-        if ($namespace = $xpdo->getObject(\modNamespace::class, ['name' => App::AUTOLOADER])) {
+        if ($namespace = $modx->getObject(\modNamespace::class, ['name' => App::AUTOLOADER])) {
             $namespace->remove();
             $output->writeln(\sprintf('<info>Removed namespace `%s`</info>', App::NAMESPACE));
         }

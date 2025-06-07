@@ -19,11 +19,11 @@ class App
     private bool $bootstrapAutoloadProcessed = false;
     private static bool $connectorRequestProcessed = false;
 
-    public function __construct(private \xPDO $xpdo)
+    public function __construct(protected \modX $modx)
     {
         \Composer\InstalledVersions::getAllRawData();
 
-        $this->config = Config::make($xpdo->config);
+        $this->config = Config::make($modx->config);
         $this->manager = Manager::create(MODX_BASE_PATH . 'composer.lock', \dirname(__DIR__) . '/packages');
 
         if (!$this->manager->hasValidLock()) {
@@ -41,9 +41,9 @@ class App
         }
     }
 
-    public function xpdo(): \xPDO
+    public function modx(): \modX
     {
-        return $this->xpdo;
+        return $this->modx;
     }
 
     public function manager(): Manager
@@ -53,8 +53,8 @@ class App
 
     public function log(string $message): void
     {
-        if (\method_exists($this->xpdo, 'log')) {
-            $this->xpdo->log(\xPDO::LOG_LEVEL_ERROR, $message);
+        if (\method_exists($this->modx, 'log')) {
+            $this->modx->log(\modX::LOG_LEVEL_ERROR, $message);
         }
     }
 
@@ -65,15 +65,18 @@ class App
         }
         $this->bootstrapAutoloadProcessed = true;
 
-        $xpdo = $this->xpdo();
+        /** @psalm-suppress UnsupportedPropertyReferenceUsage */
+        $modx = &$this->modx;
         $showErrors = (bool) $this->config->getSetting('show_errors')?->getValue();
 
         $componentPath = MODX_CORE_PATH . 'components/';
         /** @var array<ArrayNamespaceStructure> $namespaces */
-        $namespaces = $xpdo->call(\modNamespace::class, 'loadCache', [&$xpdo]);
+        $namespaces = $modx->call(\modNamespace::class, 'loadCache', [$modx]);
         $namespacesBootstrap = $this->manager->getNamespacesBootstrap($componentPath, $namespaces);
+
         $packagesBootstrap = $this->manager->getPackagesBootstrap($componentPath);
         $loadableBootstrap = \array_intersect_key($namespacesBootstrap, $packagesBootstrap);
+
         foreach ($loadableBootstrap as $bootstrap) {
             $loadableBootstrap[$bootstrap] = $this->loadBootstrap($bootstrap, $showErrors);
         }
@@ -87,6 +90,7 @@ class App
                 ),
             );
         }
+
     }
 
     protected function processConnectorRequest(): void
@@ -96,9 +100,10 @@ class App
         }
         self::$connectorRequestProcessed = true;
 
-        $xpdo = $this->xpdo();
+        /** @psalm-suppress UnsupportedPropertyReferenceUsage */
+        $modx = &$this->modx;
         /** @var array<ArrayNamespaceStructure> $namespaces */
-        $namespaces = $xpdo->call(\modNamespace::class, 'loadCache', [&$xpdo]);
+        $namespaces = $modx->call(\modNamespace::class, 'loadCache', [$modx]);
 
         $matches = [];
         if (!empty($_SERVER['REQUEST_URI']) && \preg_match('#^/assets/components/([^/]+)/api/([^/.]+)/(.*)?#', $_SERVER['REQUEST_URI'], $matches)) {
@@ -126,8 +131,11 @@ class App
             return false;
         }
 
+        /** @psalm-suppress UnsupportedPropertyReferenceUsage */
+        $modx = &$this->modx;
+
         try {
-            require_once $file;
+            require $file;
             return true;
         } catch (\Throwable $e) {
             if ($showErrors) {

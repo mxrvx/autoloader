@@ -16,7 +16,7 @@ class InstallCommand extends Command
     public function run(InputInterface $input, OutputInterface $output): int
     {
         $app = $this->app;
-        $xpdo = $this->app->xpdo();
+        $modx = $this->app->modx();
 
         $srcPath = MODX_CORE_PATH . 'vendor/' . \str_replace('-', '/', App::NAMESPACE);
         $corePath = MODX_CORE_PATH . 'components/' . App::NAMESPACE;
@@ -26,9 +26,9 @@ class InstallCommand extends Command
             $output->writeln('<info>Created symlink for `core`</info>');
         }
 
-        if (!$xpdo->getObject(\modNamespace::class, ['name' => App::AUTOLOADER])) {
+        if (!$modx->getObject(\modNamespace::class, ['name' => App::AUTOLOADER])) {
             /** @var \modNamespace $namespace */
-            $namespace = $xpdo->newObject(\modNamespace::class);
+            $namespace = $modx->newObject(\modNamespace::class);
             $namespace->fromArray(
                 [
                     'name' => App::AUTOLOADER,
@@ -42,9 +42,9 @@ class InstallCommand extends Command
             $output->writeln(\sprintf('<info>Created namespace `%s`</info>', App::NAMESPACE));
         }
 
-        if (!$xpdo->getObject(\modExtensionPackage::class, ['name' => App::NAMESPACE])) {
+        if (!$modx->getObject(\modExtensionPackage::class, ['name' => App::NAMESPACE])) {
             /** @var \modExtensionPackage $extension */
-            $extension = $xpdo->newObject(\modExtensionPackage::class);
+            $extension = $modx->newObject(\modExtensionPackage::class);
             $extension->fromArray(
                 [
                     'name' => App::NAMESPACE,
@@ -62,16 +62,16 @@ class InstallCommand extends Command
 
         /** @var array{key: string, value: mixed} $row */
         foreach ($app->config->getSettingsArray() as $row) {
-            if (!$xpdo->getObject(\modSystemSetting::class, $row['key'])) {
+            if (!$modx->getObject(\modSystemSetting::class, $row['key'])) {
                 /** @var \modSystemSetting $setting */
-                $setting = $xpdo->newObject(\modSystemSetting::class);
+                $setting = $modx->newObject(\modSystemSetting::class);
                 $setting->fromArray($row, '', true);
                 $setting->save();
                 $output->writeln(\sprintf('<info>Created system setting `%s`</info>', $row['key']));
             }
         }
 
-        $xpdo->getCacheManager()->refresh();
+        $modx->getCacheManager()->refresh();
 
         $output->writeln('<info>Cleared MODX cache</info>');
 
