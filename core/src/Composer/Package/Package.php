@@ -16,6 +16,11 @@ use MXRVX\Autoloader\App;
  *     dependencies:null|array,
  * }
  *
+ * @psalm-type DataPackageStructure = array<string, array<int, ComposerPackageStructure>>
+ *
+ * @psalm-type DataPackagesStructure = array{
+ *     packages: array<string, DataPackageStructure>
+ * }
  */
 class Package implements \JsonSerializable
 {
@@ -61,6 +66,67 @@ class Package implements \JsonSerializable
     public function getBootstrap(string $componentPath): ?string
     {
         return $this->isBin() && !$this->isAutoloader() ? \rtrim($componentPath, '/') . '/' . $this->namespace . '/bootstrap.php' : null;
+    }
+
+    public function getPackagistUrl(): string
+    {
+        return \sprintf('https://repo.packagist.org/p2/%s.json', $this->name);
+    }
+
+    /**
+     * @return string[]|null
+     */
+    public function getPackagistVersions(): ?array
+    {
+        static $content;
+
+        if ($content === null) {
+            $content = @\file_get_contents(
+                $this->getPackagistUrl(),
+                false,
+                \stream_context_create([
+                    'http' => [
+                        'ignore_errors' => true,
+                    ],
+                ]),
+            );
+        }
+
+        $result = [];
+        if (\is_string($content)) {
+            /** @var DataPackagesStructure $data */
+            $data = \json_decode($content, true);
+            if (\json_last_error() !== JSON_ERROR_NONE) {
+                $data = [];
+            }
+            /** @var DataPackageStructure $packages */
+            $packages = $data['packages'] ?? [];
+
+            /** @var ComposerPackageStructure $package */
+            $package = $packages[$this->name] ?? [];
+            if (\is_array($package)) {
+                $result = \array_column($package, 'version');
+                $result = \array_map(
+                    static fn($version) => (string) $version,
+                    $result,
+                );
+            }
+        }
+
+        return \count($result) ? $result : null;
+    }
+
+    public function getAvailableVersions(): array
+    {
+        $result = [];
+        if ($versions = $this->getPackagistVersions()) {
+            foreach ($versions as $version) {
+                if (\version_compare($this->version, $version, '<')) {
+                    $result[] = $version;
+                }
+            }
+        }
+        return $result;
     }
 
     public function jsonSerialize(): array
