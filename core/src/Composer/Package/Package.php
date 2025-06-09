@@ -116,6 +116,9 @@ class Package implements \JsonSerializable
         return \count($result) ? $result : null;
     }
 
+    /**
+     * @return string[]
+     */
     public function getAvailableVersions(): array
     {
         $result = [];
