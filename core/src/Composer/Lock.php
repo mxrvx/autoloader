@@ -62,8 +62,14 @@ class Lock
 
     private static function fromFile(string $path): self
     {
+        static $content;
+
+        if ($content === null) {
+            $content = @\file_get_contents($path);
+        }
+
         $data = [];
-        if (\is_string($content = @\file_get_contents($path))) {
+        if (\is_string($content)) {
             /** @var array $data */
             $data = \json_decode($content, true);
             if (\json_last_error() !== JSON_ERROR_NONE) {
