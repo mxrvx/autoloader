@@ -106,8 +106,6 @@ class App
 
     protected function processBootstrapAutoload(): void
     {
-        $this->modx->log(\modX::LOG_LEVEL_ERROR, 'processBootstrapAutoload');
-
         [$modx, ] = $this->getReferences();
 
         $componentPath = MODX_CORE_PATH . 'components/';
@@ -167,8 +165,6 @@ class App
 
     protected function processConnectorRequest(): void
     {
-        $this->modx->log(\modX::LOG_LEVEL_ERROR, 'processConnectorRequest');
-
         $request = $this->getConnectorRequest();
 
         if ($request === null) {
