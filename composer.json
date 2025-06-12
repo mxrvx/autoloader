@@ -24,6 +24,7 @@
         "ext-json": "*",
         "ext-pdo": "*",
         "symfony/console": "^5.4",
+        "php-di/php-di": "^7.0",
         "mxrvx/schema-system-settings": "^1.0.0"
     },
     "require-dev": {

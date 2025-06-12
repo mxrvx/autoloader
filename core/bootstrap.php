@@ -10,7 +10,7 @@ if (!\defined('MODX_CORE_PATH')) {
 
         $file = \implode(DIRECTORY_SEPARATOR, [$dir, 'core', 'config', 'config.inc.php']);
         if (\file_exists($file)) {
-            require_once $file;
+            require $file;
             break;
         }
     }
@@ -23,7 +23,7 @@ if (!\defined('MODX_CORE_PATH')) {
 
 $file = MODX_CORE_PATH . 'vendor/autoload.php';
 if (\file_exists($file)) {
-    require_once $file;
+    require $file;
 }
 unset($file);
 
@@ -32,8 +32,9 @@ require_once __DIR__ . '/deprecated.php';
 
 /** @var \modX $modx */
 if (!isset($modx)) {
-    if (\file_exists(MODX_CORE_PATH . 'model/modx/modx.class.php')) {
-        require_once MODX_CORE_PATH . 'model/modx/modx.class.php';
+    /** @psalm-suppress MissingFile */
+    if (!\class_exists(\modX::class) && \file_exists(MODX_CORE_PATH . 'model/modx/modx.class.php')) {
+        require MODX_CORE_PATH . 'model/modx/modx.class.php';
     }
     $modx = \modX::getInstance();
     $modx->initialize();

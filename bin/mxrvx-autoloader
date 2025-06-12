@@ -1,12 +1,9 @@
 #!/usr/bin/env php
 <?php
 
-declare(strict_types=1);
-
+/** @var \modX $modx */
+/** @var \DI\Container $container */
 /** @psalm-suppress MissingFile */
 require dirname(__DIR__) . '/core/bootstrap.php';
 
-/** @var \modX $modx */
-if (isset($modx)) {
-    (new MXRVX\Autoloader\Console\Console(new MXRVX\Autoloader\App($modx)))->run();
-}
+(new MXRVX\Autoloader\Console\Console($container))->run();
