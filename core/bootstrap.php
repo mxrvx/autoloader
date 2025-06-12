@@ -39,3 +39,6 @@ if (!isset($modx)) {
     $modx = \modX::getInstance();
     $modx->initialize();
 }
+
+/** @var \DI\Container $container */
+$container = $container ?? \MXRVX\Autoloader\App::getInstance($modx)->getContainer();

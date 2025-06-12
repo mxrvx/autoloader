@@ -30,18 +30,21 @@ class App
     {
         \Composer\InstalledVersions::getAllRawData();
 
-        $this->manager = Manager::create(MODX_BASE_PATH . 'composer.lock', \dirname(__DIR__) . '/packages');
+        if (self::hasInstance($modx)) {
+            $instance = self::getInstance($modx);
+            $this->config = $instance->config;
+            $this->manager = $instance->manager;
+            $this->container = $instance->container;
+        } else {
+            $this->config = Config::make($modx->config);
+            $this->manager = Manager::create(MODX_BASE_PATH . 'composer.lock', \dirname(__DIR__) . '/packages');
+            $this->container = $this->createContainer();
 
-        $builder = new ContainerBuilder();
-        $this->container = $builder->build();
-        $this->container->set(\modX::class, $modx);
+            self::setInstance($this);
 
-        $this->config = Config::make($modx->config);
-
-        self::setInstance($this);
-
-        $this->processBootstrapAutoload();
-        $this->processConnectorRequest();
+            $this->processBootstrapAutoload();
+            $this->processConnectorRequest();
+        }
 
         if (!$this->manager->hasValidLock()) {
             $this->log(
@@ -253,5 +256,14 @@ class App
         $container = &$this->container;
 
         return [$modx, $container];
+    }
+
+    protected function createContainer(): Container
+    {
+        $builder = new ContainerBuilder();
+        $container = $builder->build();
+        $container->set(\modX::class, $this->modx);
+
+        return $container;
     }
 }
