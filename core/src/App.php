@@ -42,7 +42,7 @@ class App
 
             self::setInstance($this);
 
-            $this->processBootstrapAutoload();
+            $this->processAutoloader();
             $this->processConnectorRequest();
         }
 
@@ -107,32 +107,21 @@ class App
         }
     }
 
-    protected function processBootstrapAutoload(): void
+    /**
+     * @return array<string, string>
+     */
+    public function getAutoloaders(): array
     {
         [$modx, ] = $this->getReferences();
 
         $componentPath = MODX_CORE_PATH . 'components/';
         /** @var array<ArrayNamespaceStructure> $namespaces */
         $namespaces = $modx->call(\modNamespace::class, 'loadCache', [$modx]);
-        $namespacesBootstrap = $this->manager->getNamespacesBootstrap($componentPath, $namespaces);
+        $namespacesAutoloader = $this->manager->getNamespacesAutoloader($componentPath, $namespaces);
 
-        $packagesBootstrap = $this->manager->getPackagesBootstrap($componentPath);
-        $loadableBootstrap = \array_intersect_key($namespacesBootstrap, $packagesBootstrap);
+        $packagesAutoloader = $this->manager->getPackagesAutoloader($componentPath);
 
-        foreach ($loadableBootstrap as $bootstrap) {
-            $loadableBootstrap[$bootstrap] = $this->loadBootstrap($bootstrap);
-        }
-
-        if ((bool) $this->config->getSetting('show_loads')?->getValue()) {
-            $this->log(
-                \sprintf(
-                    'loaded `%s` of `%s`',
-                    \count($loadableBootstrap),
-                    \var_export($loadableBootstrap, true),
-                ),
-            );
-        }
-
+        return \array_intersect_key($namespacesAutoloader, $packagesAutoloader);
     }
 
     /**
@@ -146,7 +135,7 @@ class App
      *  extra,
      * }|null
      */
-    protected function getConnectorRequest(): ?array
+    public function getConnectorRequest(): ?array
     {
         if (empty($_SERVER['REQUEST_URI'])) {
             return null;
@@ -164,6 +153,52 @@ class App
         }
 
         return null;
+    }
+
+    protected function processAutoloader(): void
+    {
+        [$modx, $container] = $this->getReferences();
+
+        $showErrors = $this->config->getSetting('show_errors')?->getBoolValue();
+
+        $autoloaders = $this->getAutoloaders();
+        foreach ($autoloaders as $autoloader) {
+            if (\file_exists($autoloader)) {
+
+                try {
+                    require $autoloader;
+
+                    $autoloaders[$autoloader] = true;
+
+                } catch (\Throwable $e) {
+                    $autoloaders[$autoloader] = false;
+
+                    if ($showErrors) {
+                        $this->log(
+                            \sprintf(
+                                'include `%s` failed with an error: `%s` line: `%s`',
+                                $e->getFile(),
+                                $e->getMessage(),
+                                $e->getLine(),
+                            ),
+                        );
+                    }
+                }
+            } else {
+                $autoloaders[$autoloader] = null;
+            }
+        }
+
+
+        if ($this->config->getSetting('show_loads')?->getBoolValue()) {
+            $this->log(
+                \sprintf(
+                    'loaded `%s` of autoloaders `%s`',
+                    \count($autoloaders),
+                    \var_export($autoloaders, true),
+                ),
+            );
+        }
     }
 
     protected function processConnectorRequest(): void
@@ -199,8 +234,7 @@ class App
             require $connectorPath;
             exit;
         } catch (\Throwable $e) {
-            $showErrors = (bool) $this->config->getSetting('show_errors')?->getValue();
-            if ($showErrors) {
+            if ($this->config->getSetting('show_errors')?->getBoolValue()) {
                 $this->log(
                     \sprintf(
                         'include `%s` failed with an error: `%s` line: `%s`',
@@ -211,34 +245,6 @@ class App
                 );
             }
         }
-    }
-
-    protected function loadBootstrap(string $file): bool
-    {
-        if (!\file_exists($file)) {
-            return false;
-        }
-
-        [$modx, $container] = $this->getReferences();
-
-        try {
-            require $file;
-            return true;
-        } catch (\Throwable $e) {
-            $showErrors = (bool) $this->config->getSetting('show_errors')?->getValue();
-            if ($showErrors) {
-                $this->log(
-                    \sprintf(
-                        'include `%s` failed with an error: `%s` line: `%s`',
-                        $e->getFile(),
-                        $e->getMessage(),
-                        $e->getLine(),
-                    ),
-                );
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -258,6 +264,9 @@ class App
         return [$modx, $container];
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function createContainer(): Container
     {
         $builder = new ContainerBuilder();

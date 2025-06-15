@@ -1,4 +1,4 @@
-# Automatic loading `bootstrap.php` packages installed using composer for MODX Revolution
+# Automatic loading `autoloader.php` packages installed using composer for MODX Revolution
 
 ## Installation and configuration
 
@@ -24,7 +24,6 @@ composer remove mxrvx/autoloader
 
 ## Settings
 
-* `active` - activates automatic loading of packages according to composer dependencies.
 * `show_errors` - show error when loading packages
 * `show_loads` - show information when loading packages
 
@@ -34,7 +33,8 @@ composer remove mxrvx/autoloader
 
 ```php
 /** @var \MXRVX\Autoloader\App $autoloader */
-if ($autoloader = $modx->services[\MXRVX\Autoloader\App::AUTOLOADER] ?? null) {
+$autoloader = \MXRVX\Autoloader\App::getInstance($modx);
+if ($autoloader) {
     $packages = $autoloader->manager()->getPackages();
 
     var_export($packages);
@@ -225,7 +225,8 @@ if ($autoloader = $modx->services[\MXRVX\Autoloader\App::AUTOLOADER] ?? null) {
 
 ```php
 /** @var \MXRVX\Autoloader\App $autoloader */
-if ($autoloader = $modx->services[\MXRVX\Autoloader\App::AUTOLOADER] ?? null) {
+$autoloader = \MXRVX\Autoloader\App::getInstance($modx);
+if ($autoloader) {
     $dependencies = $autoloader->manager()->getPackageDependencies('mxrvx/autoloader', $onlyBine = false);
     
     var_export($dependencies);

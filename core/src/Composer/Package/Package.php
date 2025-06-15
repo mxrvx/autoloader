@@ -63,9 +63,9 @@ class Package implements \JsonSerializable
         return $this->namespace === App::NAMESPACE;
     }
 
-    public function getBootstrap(string $componentPath): ?string
+    public function getAutoloaderFile(string $componentPath): ?string
     {
-        return $this->isBin() && !$this->isAutoloader() ? \rtrim($componentPath, '/') . '/' . $this->namespace . '/bootstrap.php' : null;
+        return $this->isBin() && !$this->isAutoloader() ? \rtrim($componentPath, '/') . '/' . $this->namespace . '/autoloader.php' : null;
     }
 
     public function getPackagistUrl(): string

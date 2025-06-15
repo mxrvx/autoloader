@@ -98,7 +98,7 @@ class Manager
      * @param array<ArrayNamespaceStructure> $namespaces
      * @return array<string, string>
      */
-    public function getNamespacesBootstrap(string $componentPath, array $namespaces): array
+    public function getNamespacesAutoloader(string $componentPath, array $namespaces): array
     {
         $result = [];
         foreach ($namespaces as $namespace) {
@@ -106,9 +106,9 @@ class Manager
             if (empty($packageSpace)) {
                 continue;
             }
-            $bootstrap = \rtrim($packageSpace, '/') . '/bootstrap.php';
-            if (\str_starts_with($bootstrap, $componentPath)) {
-                $result[$bootstrap] = $bootstrap;
+            $autoloader = \rtrim($packageSpace, '/') . '/autoloader.php';
+            if (\str_starts_with($autoloader, $componentPath)) {
+                $result[$autoloader] = $autoloader;
             }
         }
 
@@ -118,12 +118,12 @@ class Manager
     /**
      * @return array<string, string>
      */
-    public function getPackagesBootstrap(string $componentPath): array
+    public function getPackagesAutoloader(string $componentPath): array
     {
         $result = [];
         foreach ($this->getPackages()->all() as $package) {
-            if ($bootstrap = $package->getBootstrap($componentPath)) {
-                $result[$bootstrap] = $bootstrap;
+            if ($autoloader = $package->getAutoloaderFile($componentPath)) {
+                $result[$autoloader] = $autoloader;
             }
         }
         return $result;
@@ -139,7 +139,7 @@ class Manager
         if (!\file_exists($this->lockFilePath)) {
             return null;
         }
-        return \sprintf('%s/packages_%s.json', $this->cacheDir, \filemtime($this->lockFilePath));
+        return \sprintf('%s/packages_%s.json', $this->cacheDir, (string) \filemtime($this->lockFilePath));
     }
 
     private function saveCache(string $cacheFile): void
@@ -148,8 +148,8 @@ class Manager
         $packages = $this->getPackages();
         if ($packages->count()) {
             $content = \json_encode(['packages' => $packages], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            if (\file_put_contents($cacheFile, $content) === false) {
-                throw new \RuntimeException(\sprintf('Failed to save cache file: `%s`', $cacheFile));
+            if (\is_string($content)) {
+                \file_put_contents($cacheFile, $content);
             }
         }
     }
@@ -158,10 +158,12 @@ class Manager
     {
         if (!\file_exists($this->cacheDir)) {
             if (!\mkdir($this->cacheDir, 0755, true) && !\is_dir($this->cacheDir)) {
-                throw new \RuntimeException("Failed to create cache directory");
+                return;
             }
         }
 
-        \array_map('unlink', \glob(\sprintf('%s/packages_*.json', $this->cacheDir)));
+        if ($files = \glob(\sprintf('%s/packages_*.json', $this->cacheDir))) {
+            \array_map('unlink', $files);
+        }
     }
 }
