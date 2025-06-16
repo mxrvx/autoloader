@@ -85,6 +85,20 @@ class App
         return isset(self::$instances[$id]);
     }
 
+    public static function getModxInstance(): \modX
+    {
+        $modx = null;
+
+        foreach (self::$instances as $instance) {
+            if ($instance instanceof self) {
+                $modx = $instance->modx();
+                break;
+            }
+        }
+
+        return $modx instanceof \modX ? $modx : \modX::getInstance();
+    }
+
     public function getContainer(): Container
     {
         return $this->container;
