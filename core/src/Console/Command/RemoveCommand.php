@@ -15,7 +15,7 @@ class RemoveCommand extends Command
 
     public function run(InputInterface $input, OutputInterface $output): int
     {
-        $modx = $this->app->modx();
+        $modx = $this->app->getModx();
 
         $corePath = MODX_CORE_PATH . 'components/' . App::NAMESPACE;
         if (\is_dir($corePath)) {

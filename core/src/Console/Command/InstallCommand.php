@@ -16,7 +16,7 @@ class InstallCommand extends Command
     public function run(InputInterface $input, OutputInterface $output): int
     {
         $app = $this->app;
-        $modx = $this->app->modx();
+        $modx = $this->app->getModx();
 
         $srcPath = MODX_CORE_PATH . 'vendor/' . \str_replace('-', '/', App::NAMESPACE);
         $corePath = MODX_CORE_PATH . 'components/' . App::NAMESPACE;
