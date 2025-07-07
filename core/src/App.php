@@ -99,9 +99,17 @@ class App
         return $modx instanceof \modX ? $modx : \modX::getInstance();
     }
 
-    public static function clearCache(): void
+    public static function clearCache(bool $fireOnCacheUpdateEvent = true): void
     {
         self::deleteDirectory(MODX_CORE_PATH . 'cache/', true);
+
+        if ($fireOnCacheUpdateEvent && $modx = self::getModxInstance()) {
+            $modx->invokeEvent('OnCacheUpdate', [
+                'results' => ['all' => true],
+                'paths' => [],
+                'options' => ['all'],
+            ]);
+        }
     }
 
     /**
