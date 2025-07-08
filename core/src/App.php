@@ -8,9 +8,6 @@ use DI\Container;
 use DI\ContainerBuilder;
 use MXRVX\Schema\System\Settings\SchemaConfigInterface;
 
-/**
- * @psalm-import-type ArrayNamespaceStructure from PackageManager
- */
 class App
 {
     public const NAMESPACE = 'mxrvx-autoloader';
@@ -57,6 +54,11 @@ class App
         return self::$instance;
     }
 
+    public static function container(): Container
+    {
+        return self::getInstance()->getContainer();
+    }
+
     public static function packageManager(): PackageManager
     {
         return self::getInstance()->getPackageManager();
@@ -72,14 +74,20 @@ class App
         return self::getInstance()->getModx();
     }
 
-    public function runHandlers(): void
+    /**
+     * @return class-string[]
+     */
+    public function getHandlerClasses(): array
     {
-        $handlers = [
+        return [
             Handlers\AutoloaderHandler::class,
             Handlers\ConnectorHandler::class,
         ];
+    }
 
-        foreach ($handlers as $className) {
+    public function runHandlers(): void
+    {
+        foreach ($this->getHandlerClasses() as $className) {
             /** @var callable $handler */
             $handler = $this->container->get($className);
             if (\is_callable($handler)) {
@@ -138,14 +146,17 @@ class App
     protected function createContainer(): Container
     {
         $builder = new ContainerBuilder();
-        $builder->addDefinitions([
+
+        $handlers = $this->getHandlerClasses();
+        $builder->addDefinitions(\array_merge([
             App::class => $this,
             \modX::class => $this->modx,
             PackageManager::class => $this->packageManager,
             CacheManager::class => $this->cacheManager,
-            Handlers\AutoloaderHandler::class => \DI\autowire(),
-            Handlers\ConnectorHandler::class => \DI\autowire(),
-        ]);
+        ], \array_combine(
+            $handlers,
+            \array_map(static fn($class) => \DI\autowire(), $handlers),
+        )));
 
         return $builder->build();
     }
