@@ -32,14 +32,10 @@ composer remove mxrvx/autoloader
 ### Get packages
 
 ```php
-/** @var \MXRVX\Autoloader\App $autoloader */
-$autoloader = \MXRVX\Autoloader\App::getInstance($modx);
-if ($autoloader) {
-    $packages = $autoloader->manager()->getPackages();
+$packages = \MXRVX\Autoloader\App::packageManager()->getPackages();
+var_export($packages);
 
-    var_export($packages);
-    
-    \MXRVX\Autoloader\Composer\Package\Packages::__set_state(array(
+\MXRVX\Autoloader\Composer\Package\Packages::__set_state(array(
    'packages' => 
   array (
     'psr/container' => 
@@ -224,12 +220,8 @@ if ($autoloader) {
 ### Get package dependencies
 
 ```php
-/** @var \MXRVX\Autoloader\App $autoloader */
-$autoloader = \MXRVX\Autoloader\App::getInstance($modx);
-if ($autoloader) {
-    $dependencies = $autoloader->manager()->getPackageDependencies('mxrvx/autoloader', $onlyBine = false);
-    
-    var_export($dependencies);
+$packages = \MXRVX\Autoloader\App::packageManager()->getPackageDependencies('mxrvx/autoloader', $onlyBine = false);
+var_export($dependencies);
 
     array (
       'mxrvx/schema-system-settings' => 
