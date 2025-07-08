@@ -16,14 +16,16 @@ use MXRVX\Autoloader\Composer\Package\Packages;
  * }
  *
  */
-class Manager
+class PackageManager
 {
     private Lock $lock;
 
-    private function __construct(
-        private readonly string $lockFilePath,
-        private readonly string $cacheDir,
+    public function __construct(
+        private string $lockFilePath,
+        private string $cacheDir,
     ) {
+        $this->cacheDir = \rtrim($cacheDir, DIRECTORY_SEPARATOR);
+
         if (!$cacheFilePath = $this->getCacheFilePath()) {
             $this->lock = Lock::fromArray([]);
         } else {
@@ -34,11 +36,6 @@ class Manager
                 $this->saveCache($cacheFilePath);
             }
         }
-    }
-
-    public static function create(string $lockFilePath, string $cacheDir): self
-    {
-        return new self($lockFilePath, \rtrim($cacheDir, DIRECTORY_SEPARATOR));
     }
 
     public function getLockFile(): string
