@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use MXRVX\Autoloader\App;
+
 if (!\defined('MODX_CORE_PATH')) {
 
     $dir = __DIR__;
@@ -40,5 +42,6 @@ if (!isset($modx)) {
     $modx->initialize();
 }
 
+$app = App::hasInstance() ? App::getInstance() : new App($modx);
 /** @var \DI\Container $container */
-$container = $container ?? \MXRVX\Autoloader\App::getInstance($modx)->getContainer();
+$container = $container ?? $app::container();

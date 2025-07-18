@@ -46,6 +46,11 @@ class App
         }
     }
 
+    public static function hasInstance(): bool
+    {
+        return isset(self::$instance);
+    }
+
     public static function getInstance(): self
     {
         if (self::$instance === null) {
